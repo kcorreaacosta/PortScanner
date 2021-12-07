@@ -6,10 +6,10 @@ import random
 dateTimeObj = datetime.now()
 
 
-#finds if the IP is alive
-#https://stackoverflow.com/questions/2953462/pinging-servers-in-python
+# # finds if the IP is alive
+# # https://stackoverflow.com/questions/2953462/pinging-servers-in-python
 # def findingIP():
-#     hostname = "https://www.hackthissite.org/" 
+#     hostname =  
 #     response = os.system("ping -c 1 " + hostname)
 #     if response == 0:
 #         print (hostname, 'is up!')
@@ -17,53 +17,42 @@ dateTimeObj = datetime.now()
 #     else:
 #         print (hostname, 'is down!')
 
+## Variables 
+startTime = time.time()
+closedPortsCounter = 0 
 
-#loop through the ports
-#def portScan():
+# ports = list(rangle (1, 65535))
+# randomly shuffles the ports from the list and replaces the list with the randomized order
+#  random.shuffle (ports) 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# here we asking for the target website or host
-target = input('What you want to scan?: ')
+# def portScan():
+targetInput = input('What you want to scan?: ')
 print('Starting port scan ', dateTimeObj) 
-# next line gives us the ip address of the target
-target_ip = socket.gethostbyname(target)
+#get the ip address from target input
+target_ip = socket.gethostbyname(targetInput)
 print('Interesting ports on: ', target_ip)
- 
-# function for scanning ports
+try:
+    for port in range(1,100):
+        # initiates the streaming socket 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 
-def port_scan(port):
-    try:
-        s.connect((target_ip, port))
-        return True 
-    except:
-        return False
- 
-start = time.time()
-closed = 0
-# here we are scanning port 0 to 65,535 in order
-for port in range(130, 180): 
-    # if port_scan(port):
-    #     socket.getservbyport() 
-    #     print(f'port {port} is open')
-    try:
-        result = s.connect_ex((target_ip,port))
+        # this time out the code at 2 miliseconds 
+        s.settimeout(0.02) 
+
+        # connects to a remote socket at the target_ip address
+        result = s.connect_ex((target_ip, port))  
+
+        # if 0 connection is successful
         if result == 0:
-            print("hi")
             print("Port {} is open".format(port))
-            # s.close()
-        # if port_scan(port):
-        #     socket.getservbyport() 
-        #     print("hello")
-        #     print(f'port {port} is open')
-        # else:
-        #     # closed = closed + 1
-        #     print("hi")
+        # the port is closed and counter is increased 
+        else: 
+            closedPortsCounter = closedPortsCounter + 1 
+        # closes the socket
+        s.close()
+except Exception as err:
+    print(err)
 
-    except Exception as err:
-        print(err)
-
-end = time.time()
-#print('Not shown:', closed, 'closed ports' )
-print(f'scan done! scanned in {end-start:.2f} seconds')
-
-s.close()
+endTime = time.time()
+print('Not shown:', closedPortsCounter, 'closed ports' )
+print(f'scan done! scanned in {endTime-startTime:.2f} seconds')
