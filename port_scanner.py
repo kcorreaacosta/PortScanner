@@ -15,6 +15,10 @@ def findingIP(ip):
         return ("1 IP address (1 host up)")
 
 def portScan(scan,ip,numOfPorts):
+    if numOfPorts == 'all':
+        portsToScan = 200
+    else:
+        portsToScan = 100
 ## Variables 
     startTime = time.time()
     closedPortsCounter = 0
@@ -24,10 +28,9 @@ def portScan(scan,ip,numOfPorts):
     print('Interesting ports on ', target_ip,':')
     if scan == 'order':
         try:
-            for port in range(0,numOfPorts):
+            for port in range(0,portsToScan):
                 # initiates the streaming socket 
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-
                 # this time out the code at 2 miliseconds 
                 s.settimeout(0.02) 
 
@@ -37,17 +40,17 @@ def portScan(scan,ip,numOfPorts):
                 # if 0 connection is successful
                 if result == 0:
                     state = 'Open'
-                    service = socket.getservbyport(port)
+                    portNum=port
+                    service = socket.getservbyport(portNum)
                 # the port is closed and counter is increased 
                 else: 
-                    closedPortsCounter = closedPortsCounter + 1
-                    state = 'Closed' 
+                    closedPortsCounter = closedPortsCounter + 1 
                 # closes the socket
                 s.close()
         except Exception as err:
             print(err)
     else:
-        ports = list(range (1, numOfPorts))
+        ports = list(range (1, portsToScan))
         #randomly shuffles the ports from the list and replaces the list with the randomized order
         random.shuffle (ports) 
         try:
@@ -63,26 +66,29 @@ def portScan(scan,ip,numOfPorts):
                 # if 0 connection is successful
                 if result == 0:
                     state = 'Open'
-                    service = socket.getservbyport(port)
+                    portNum=port
+                    service = socket.getservbyport(portNum)
                 # the port is closed and counter is increased 
                 else: 
                     closedPortsCounter = closedPortsCounter + 1
-                    state = 'Closed' 
                 # closes the socket
                 s.close()
         except Exception as err:
             print(err)
 
     endTime = time.time()
-    print('Not shown:', closedPortsCounter, 'closed ports' )
-    print("PORT\tSTATE\tSERVICE")
-    print(port,"\t",state,"\t",service)
+    finalPrint(closedPortsCounter,portNum,state,service)
     print('scan done!', findingIP(ip) ,f'scanned in {endTime-startTime:.2f} seconds')
 
-def main():
-    findingIP('glasgow.smith.edu')
-    portScan('order','glasgow.smith.edu',100)
+#will print the table of open ports
+def finalPrint(closedPortsCounter,portNum,state,service):
+    print('Not shown:', closedPortsCounter, 'closed ports' )
+    print("PORT\tSTATE\tSERVICE")
+    print(portNum,"\t",state,"\t",service)
 
+def main():
+    findingIP('144.121.36.209')
+    portScan('order','144.121.36.209','all')
 
 if __name__ == "__main__":
     main()
