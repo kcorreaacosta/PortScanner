@@ -23,14 +23,18 @@ def finalPrint(closedPortsCounter,portNum,state,service):
     print(portNum,"\t",state,"\t",service)
 
 def portScan(scan,ip,numOfPorts):
-    global portNum
+    # global portNum
     if numOfPorts == 'all':
         portsToScan = 200
-    else:
+    elif numOfPorts == 'well-known':
         portsToScan = 100
+    else:
+        print("Choice to scan all or well-known ports")
 ## Variables 
     startTime = time.time()
     closedPortsCounter = 0
+    portNum = None
+
     print('Starting port scan at ', dateTimeObj) 
     #get the ip address from target input
     target_ip = socket.gethostbyname(ip)
@@ -49,7 +53,7 @@ def portScan(scan,ip,numOfPorts):
                 # if 0 connection is successful
                 if result == 0:
                     state = 'Open'
-                    portNum=port
+                    portNum = port
                     service = socket.getservbyport(portNum)
                 # the port is closed and counter is increased 
                 else: 
@@ -58,7 +62,7 @@ def portScan(scan,ip,numOfPorts):
                 s.close()
         except Exception as err:
             print(err)
-    else:
+    elif scan == 'random':
         ports = list(range (1, portsToScan))
         #randomly shuffles the ports from the list and replaces the list with the randomized order
         random.shuffle (ports) 
@@ -84,6 +88,8 @@ def portScan(scan,ip,numOfPorts):
                 s.close()
         except Exception as err:
             print(err)
+    else: 
+        print("Choice to scan in order or randomly")
 
     endTime = time.time()
     finalPrint(closedPortsCounter,portNum,state,service)
@@ -91,14 +97,17 @@ def portScan(scan,ip,numOfPorts):
 
 ###################################################################################
 def tcpSYNscan(scan,ip,numOfPorts):
-    global portNum
     if numOfPorts == 'all':
         portsToScan = 200
-    else:
+    elif numOfPorts == 'well-known':
         portsToScan = 100
+    else:
+        print("Choice to scan all or well-known ports")
     #Variables 
     startTime = time.time()
     closedPortsCounter = 0
+    portNum = None
+
     print('Starting port scan at ', dateTimeObj) 
     #get the ip address from target input
     target_ip = socket.gethostbyname(ip)
@@ -113,13 +122,13 @@ def tcpSYNscan(scan,ip,numOfPorts):
                         state = 'Open'
                         portNum = i
                         service = socket.getservbyport(portNum)
-                        RSTpacket = sr(IP(dst='glasgow.smith.edu')/TCP(dport= i , flags="R"),timeout=10)
+                        RSTpacket = sr(IP(dst=ip)/TCP(dport= i , flags="R"),timeout=10)
                         send(RSTpacket)
                 except AttributeError:
                     closedPortsCounter = closedPortsCounter + 1
         except Exception as err:
             print(err)
-    else:
+    elif scan == 'random':
         ports = list(range (1, portsToScan))
         #randomly shuffles the ports from the list and replaces the list with the randomized order
         random.shuffle (ports) 
@@ -132,12 +141,91 @@ def tcpSYNscan(scan,ip,numOfPorts):
                         state = 'Open'
                         portNum = port
                         service = socket.getservbyport(portNum)
-                        RSTpacket = sr(IP(dst='glasgow.smith.edu')/TCP(dport= port , flags="R"),timeout=10)
+                        RSTpacket = sr(IP(dst=ip)/TCP(dport= port , flags="R"),timeout=10)
                         send(RSTpacket)
                 except AttributeError:
                     closedPortsCounter = closedPortsCounter + 1
         except Exception as err:
             print(err)
+    else: 
+        print("Choice to scan in order or randomly")
+
+    endTime = time.time()
+    finalPrint(closedPortsCounter,portNum,state,service)
+    print('scan done!', findingIP(ip) ,f'scanned in {endTime-startTime:.2f} seconds')
+
+####################################################
+def tcpFINscan(scan,ip,numOfPorts):
+    if numOfPorts == 'all':
+        portsToScan = 200
+    else:
+        portsToScan = 100
+    #Variables 
+    startTime = time.time()
+    closedPortsCounter = 0
+    portNum = None
+
+    print('Starting port scan at ', dateTimeObj) 
+    #get the ip address from target input
+    target_ip = socket.gethostbyname(ip)
+    print('Interesting ports on ', target_ip,':')
+    if scan == 'order':
+        try:
+            for i in range(0,portsToScan):
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind(('', i))
+                # this time out the code at 2 miliseconds 
+                s.settimeout(0.02) 
+
+                # connects to a remote socket at the target_ip address
+                result = s.connect_ex((ip, i)) 
+
+                if result == 0:
+                    state = "Open"
+                    portNum = s.getsockname()[1] # getting port number
+                    service = socket.getservbyport(portNum, "tcp")
+
+                tcpRequest = IP(dst=ip)/TCP(dport= i, flags="F")
+                tcpResponse = sr1(tcpRequest,verbose=0, timeout = 1)
+                s.close()
+                
+                if tcpResponse is None:
+                    closedPortsCounter = closedPortsCounter + 1
+                else:
+                    print(i , '\t' , "Port is open")
+        except Exception as err:
+            print(err)
+    elif scan == "random":
+        ports = list(range (1, portsToScan))
+        #randomly shuffles the ports from the list and replaces the list with the randomized order
+        random.shuffle (ports) 
+        try:
+            for port in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind(('', port))
+                # this time out the code at 2 miliseconds 
+                s.settimeout(0.02) 
+
+                # connects to a remote socket at the target_ip address
+                result = s.connect_ex((ip, port)) 
+
+                if result == 0:
+                    state = "Open"
+                    portNum = s.getsockname()[1] # getting port number
+                    service = socket.getservbyport(portNum, "tcp")
+
+                tcpRequest = IP(dst=ip)/TCP(dport= port, flags="F")
+                tcpResponse = sr1(tcpRequest,verbose=0, timeout = 1)
+                s.close()
+                
+                if tcpResponse is None:
+                    closedPortsCounter = closedPortsCounter + 1
+                else:
+                    print(i , '\t' , "Port is open")
+        except Exception as err:
+            print(err)
+    else: 
+        print("Choice to scan in order or randomly")
 
     endTime = time.time()
     finalPrint(closedPortsCounter,portNum,state,service)
@@ -148,9 +236,13 @@ def main():
     findingIP(sys.argv[3])
     if sys.argv[1] == "normal":
         portScan(sys.argv[2], sys.argv[4], sys.argv[3])
-    # elif sys.argv[1] == "syn":
-    else: 
+    elif sys.argv[1] == "syn":
         tcpSYNscan(sys.argv[2], sys.argv[4], sys.argv[3])
+    elif sys.argv[1] == "fin":
+        tcpFINscan(sys.argv[2], sys.argv[4], sys.argv[3])
+    # finalPrint(closedPortsCounter,portNum,state,service)
+    # print('scan done!', findingIP(ip) ,f'scanned in {endTime-startTime:.2f} seconds')
+
 
 if __name__ == "__main__":
     main()
