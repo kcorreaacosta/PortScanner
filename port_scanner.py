@@ -14,7 +14,14 @@ def findingIP(ip):
     else:
         return ("1 IP address (1 host up)")
 
+#will print the table of open ports
+def finalPrint(closedPortsCounter,portNum,state,service):
+    print('Not shown:', closedPortsCounter, 'closed ports' )
+    print("PORT\tSTATE\tSERVICE")
+    print(portNum,"\t",state,"\t",service)
+
 def portScan(scan,ip,numOfPorts):
+    global portNum
     if numOfPorts == 'all':
         portsToScan = 200
     else:
@@ -66,7 +73,7 @@ def portScan(scan,ip,numOfPorts):
                 # if 0 connection is successful
                 if result == 0:
                     state = 'Open'
-                    portNum=port
+                    portNum = port
                     service = socket.getservbyport(portNum)
                 # the port is closed and counter is increased 
                 else: 
@@ -80,15 +87,9 @@ def portScan(scan,ip,numOfPorts):
     finalPrint(closedPortsCounter,portNum,state,service)
     print('scan done!', findingIP(ip) ,f'scanned in {endTime-startTime:.2f} seconds')
 
-#will print the table of open ports
-def finalPrint(closedPortsCounter,portNum,state,service):
-    print('Not shown:', closedPortsCounter, 'closed ports' )
-    print("PORT\tSTATE\tSERVICE")
-    print(portNum,"\t",state,"\t",service)
-
 def main():
-    findingIP('144.121.36.209')
-    portScan('order','144.121.36.209','all')
+    findingIP('glasgow.smith.edu')
+    portScan('order','glasgow.smith.edu','all')
 
 if __name__ == "__main__":
     main()
